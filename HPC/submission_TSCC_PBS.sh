@@ -122,12 +122,13 @@ done
 conda deactivate
 
 echo "----------------------     Step 6: Variants Filtering     ----------------------"
+ppn=8
 remove_snps=# replace with SNPs position to remove after stitch eg. /projects/ps-palmer/hs_rats/Robbie_pipeline/n=88/final_set/remove_snps
 STEP6_VARIANT_FILTERING=$(qsub -q hotel -N variant_filtering -l nodes=1:ppn=${ppn},walltime=36:00:00 \
 						-j oe -k oe -m ae -M ${email} \
 						-W depend=afterokarray:${STEP5_CONCAT_SNPS_id} \
 						-V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}",remove_snps="${remove_snps}" \
-						${code}/genotyping/step5_concat_variants.sh)
+						${code}/genotyping/step6_variants_filtering.sh)
 echo "step6_variants_filtering: ${STEP6_VARIANT_FILTERING}"
 STEP6_VARIANT_FILTERING_id=$(echo "${STEP6_VARIANT_FILTERING}" | cut -d '.' -f 1 )
 
