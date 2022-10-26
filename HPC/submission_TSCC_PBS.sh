@@ -25,8 +25,14 @@ source activate hs_rats
 num_lib_py=$(cat <<'EOF'
 import pandas as pd
 import sys
-metadata = pd.read_csv(sys.argv[1], dtype=str)
-sys.stdout.write(str(len(metadata["Library_ID"].unique())))
+origial_metadata = pd.read_csv(sys.argv[1], dtype=str)
+metadata_cols = origial_metadata.columns.tolist()
+Library_ID = ""
+for col in metadata_cols:
+	if "library_name" == col.lower():
+		Library_ID = col
+		break
+sys.stdout.write(str(len(set(origial_metadata[Library_ID]))))
 EOF
 )
 num_lib() { python3 -c "${num_lib_py}" "$@"; }
@@ -52,8 +58,9 @@ source activate hs_rats
 num_sample_py=$(cat <<'EOF'
 import pandas as pd
 import sys
-metadata = pd.read_csv(sys.argv[1], dtype=str)
-sys.stdout.write(str(len(metadata["Sample_ID"].unique())))
+origial_metadata = pd.read_csv(sys.argv[1], dtype=str)
+metadata_cols = origial_metadata.columns.tolist()
+sys.stdout.write(str(len(origial_metadata["rfid"])))
 EOF
 )
 num_sample() { python3 -c "${num_sample_py}" "$@"; }
@@ -69,7 +76,6 @@ num_jobs=$(num_sample ${current_metadata})
 STEP3_ALIGNMENT_JOB_ARR=$(qsub -q condo -N mapping -l nodes=1:ppn=${ppn},walltime=8:00:00 -t 1-${num_jobs} \
 							-j oe -k oe -m ae -M ${email} \
 							-V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}",java_mem="${java_mem}" \
-							-W depend=afterokarray:${STEP2_DEMUX_JOB_ARR_id} \
 							${code}/genotyping/step3_alignment_array_jobs.sh)
 echo "step3_alignment: ${STEP3_ALIGNMENT_JOB_ARR}"
 STEP3_ALIGNMENT_JOB_ARR_id=$(echo "${STEP3_ALIGNMENT_JOB_ARR}" | cut -d '.' -f 1 )
@@ -105,7 +111,6 @@ do
 	((num_jobs=num_chunks-1))
 	STEP4_STITCH_JOB_ARR=$(qsub -q condo -N stitch${niterations}_${chr} -l nodes=1:ppn=${ppn},walltime=8:00:00 -t 1-${num_jobs} \
 							-j oe -k oe -m ae -M ${email} \
-							-W depend=afterokarray:${STEP3_ALIGNMENT_JOB_ARR_id} \
 							-V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}",chr="${chr}",k="${k}",niterations="${niterations}",nGen="${nGen}",method="${method}",bamlist="${bamlist}",sampleNames_file="${sampleNames_file}",tempdir="${tempdir}",chunk_file="${chunk_file}",nCore=${nCore},posfile="${posfile}" \
 							${code}/genotyping/step4_stitch_genotypeCalling_array_jobs.sh)
 	echo "step4_${chr}_stitch: ${STEP4_STITCH_JOB_ARR}"
@@ -113,7 +118,6 @@ do
 
 	STEP5_CONCAT_SNPS=$(qsub -q hotel -N concat_${chr} -l nodes=1:ppn=${ppn},walltime=36:00:00 \
 							-j oe -k oe -m ae -M ${email} \
-							-W depend=afterokarray:${STEP4_STITCH_JOB_ARR_id} \
 							-V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}",chr="${chr}" \
 							${code}/genotyping/step5_concat_variants.sh)
 	echo "step5_${chr}_concat: ${STEP5_CONCAT_SNPS}"
@@ -126,7 +130,6 @@ ppn=8
 remove_snps=# replace with SNPs position to remove after stitch eg. /projects/ps-palmer/hs_rats/Robbie_pipeline/n=88/final_set/remove_snps
 STEP6_VARIANT_FILTERING=$(qsub -q hotel -N variant_filtering -l nodes=1:ppn=${ppn},walltime=36:00:00 \
 						-j oe -k oe -m ae -M ${email} \
-						-W depend=afterokarray:${STEP5_CONCAT_SNPS_id} \
 						-V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}",remove_snps="${remove_snps}" \
 						${code}/genotyping/step6_variants_filtering.sh)
 echo "step6_variants_filtering: ${STEP6_VARIANT_FILTERING}"
@@ -142,7 +145,6 @@ num_jobs=$(num_lib ${current_metadata})
 QC1_MULTIQC_JOB=$(qsub -q home -N qc -l nodes=1:ppn=${ppn},walltime=8:00:00 -t 1-${num_jobs} \
                        -j oe -k oe -m ae -M ${email} \
                        -V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}" \
-                       -W depend=afterokarray:${STEP2_DEMUX_JOB_ARR_id} \
                        ${code}/quality_control/QC1_multiqc_trimming.sh)
 echo "QC1_multiQC: ${QC1_MULTIQC_JOB}"
 
@@ -154,7 +156,6 @@ ppn=12
 QC2_MAPPINGRESULT_JOB=$(qsub -q hotel -N mapping_stat -l nodes=1:ppn=${ppn},walltime=168:00:00 \
                              -j oe -k oe -m ae -M ${email} \
                              -V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}" \
-                             -W depend=afterokarray:${STEP3_ALIGNMENT_JOB_ARR_id} \
                              ${code}/quality_control/QC2_mappingResult.sh)
 echo "QC2_mapping_results: ${QC2_MAPPINGRESULT_JOB}"
 
@@ -166,6 +167,5 @@ ppn=12
 QC3_GENOTYPERESULT_JOB=$(qsub -q hotel -N genotype_stat -l nodes=1:ppn=${ppn},walltime=168:00:00 \
                               -j oe -k oe -m ae -M ${email} \
                               -V -v pipeline_arguments="${pipeline_arguments}",previous_flow_cells_metadata="${previous_flow_cells_metadata}",bamlist="${bamlist}",ppn="${ppn}",software="${software}" \
-                              -W depend=afterokarray:${STEP6_VARIANT_FILTERING_id} \
                               ${code}/quality_control/QC3_genotypeResult.sh)
 echo "QC3_genotype_results: ${QC3_GENOTYPERESULT_JOB}"
