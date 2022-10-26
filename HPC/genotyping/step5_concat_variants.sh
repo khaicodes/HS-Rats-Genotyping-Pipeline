@@ -5,6 +5,7 @@ ncpu=${ppn}
 
 #### extract info from argument files
 dir_path=$(head -n 1 ${pipeline_arguments} | tail -n 1)
+reference_genome=$(head -n 4 ${pipeline_arguments} | tail -n 1)
 
 #### construct more variables based on extracted info
 ref_gen=$(echo ${reference_genome} | rev | cut -d '/' -f 1 | cut -d '.' -f 2- | rev)
