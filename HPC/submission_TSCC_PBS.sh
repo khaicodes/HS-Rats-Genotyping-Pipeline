@@ -127,7 +127,7 @@ conda deactivate
 
 echo "----------------------     Step 6: Variants Filtering     ----------------------"
 ppn=8
-remove_snps=# replace with SNPs position to remove after stitch eg. /projects/ps-palmer/hs_rats/Robbie_pipeline/n=88/final_set/remove_snps
+remove_snps= # replace with SNPs position to remove after stitch eg. /projects/ps-palmer/hs_rats/Robbie_pipeline/n=88/final_set/remove_snps
 STEP6_VARIANT_FILTERING=$(qsub -q hotel -N variant_filtering -l nodes=1:ppn=${ppn},walltime=36:00:00 \
 						-j oe -k oe -m ae -M ${email} \
 						-V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}",remove_snps="${remove_snps}" \
@@ -141,7 +141,7 @@ STEP6_VARIANT_FILTERING_id=$(echo "${STEP6_VARIANT_FILTERING}" | cut -d '.' -f 1
 #### (optional) change ppn for the number of processer per node based on needs
 #### !!!!!!!!!!!!!!!!!!!!!!
 ppn=6
-num_jobs=$(num_lib ${current_metadata})
+num_jobs= #enter number of libraries 
 QC1_MULTIQC_JOB=$(qsub -q home -N qc -l nodes=1:ppn=${ppn},walltime=8:00:00 -t 1-${num_jobs} \
                        -j oe -k oe -m ae -M ${email} \
                        -V -v pipeline_arguments="${pipeline_arguments}",ppn="${ppn}",software="${software}" \
