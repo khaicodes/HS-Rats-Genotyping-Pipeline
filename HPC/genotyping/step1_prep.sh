@@ -25,7 +25,7 @@ echo "----------------------------------------------------------------------"
 START=$(date +%s)
 #### create the directory structure.
 if [ -d "${dir_path}" ]; then
-	folder: ${dir_path} already exists"
+	folder: "${dir_path} already exists"
 else
 	echo "create folder: ${dir_path}"
 	mkdir ${dir_path}
@@ -45,7 +45,7 @@ fi
 #### create a shared trimmed folder between the reference genomes
 file=${dir_path}/trimmed
 if [ -d "${file}" ]; then
-	folder: ${file} already exists"
+	folder: "${file} already exists"
 else
 	echo "create folder: ${file}"
 	mkdir ${file}
