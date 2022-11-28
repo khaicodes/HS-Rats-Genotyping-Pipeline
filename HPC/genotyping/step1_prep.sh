@@ -25,7 +25,7 @@ echo "----------------------------------------------------------------------"
 START=$(date +%s)
 #### create the directory structure.
 if [ -d "${dir_path}" ]; then
-	folder: "${dir_path} already exists"
+	echo "folder: ${dir_path} already exists"
 else
 	echo "create folder: ${dir_path}"
 	mkdir ${dir_path}
@@ -45,7 +45,7 @@ fi
 #### create a shared trimmed folder between the reference genomes
 file=${dir_path}/trimmed
 if [ -d "${file}" ]; then
-	folder: "${file} already exists"
+	echo "folder: ${file} already exists"
 else
 	echo "create folder: ${file}"
 	mkdir ${file}
@@ -86,28 +86,28 @@ END=$(date +%s)
 echo "Construct output directory, time elapsed: $(( $END - $START )) seconds"
 
 
-echo "----------------------------------------------------------------------"
-echo "----------------- Check and build conda environment ------------------"
-echo "----------------------------------------------------------------------"
-START=$(date +%s)
-python -m conda
-has_conda=$(echo $?)
-if [ ${has_conda} != 0 ]; then
-	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-	bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
-	rm Miniconda3-latest-Linux-x86_64.sh
-fi
-source activate hs_rats
-has_conda_env=$(echo $?)
-if [ ${has_conda_env} != 0 ]; then
-	source activate base
-	conda create -y -n hs_rats --file ${code}/software/hs_rats_conda_env.yml
-	source activate hs_rats
-fi
-conda update --all -y
+# echo "----------------------------------------------------------------------"
+# echo "----------------- Check and build conda environment ------------------"
+# echo "----------------------------------------------------------------------"
+# START=$(date +%s)
+# python -m conda
+# has_conda=$(echo $?)
+# if [ ${has_conda} != 0 ]; then
+# 	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# 	bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
+# 	rm Miniconda3-latest-Linux-x86_64.sh
+# fi
+# source activate hs_rats
+# has_conda_env=$(echo $?)
+# if [ ${has_conda_env} != 0 ]; then
+# 	source activate base
+# 	conda create -y -n hs_rats --file ${code}/software/hs_rats_conda_env.yml
+# 	source activate hs_rats
+# fi
+# conda update --all -y
 
-END=$(date +%s)
-echo "Check and build conda environment, time elapsed: $(( $END - $START )) seconds"
+# END=$(date +%s)
+# echo "Check and build conda environment, time elapsed: $(( $END - $START )) seconds"
 
 
 echo "----------------------------------------------------------------------"
